@@ -375,7 +375,7 @@ right_cell = cols[1].container(border=True, height="stretch", vertical_alignment
 
 
 # ---- Normalisierungs- und Cleaning-Funktion ----
-def normalize_and_clean(data):
+def normalized_and_clean(data):
     """
     Normalisiert Daten und entfernt Spalten mit zu vielen fehlenden Werten.
     - Spalten die komplett leer sind → entfernen
@@ -429,7 +429,7 @@ def load_data(tickers, period):
 #---Ende Caching---
 
 
-#----Fehler Behandlung für YFinance Rate-Limit und leere Daten(passiert zb. bei ungültigen ticker)-----
+# ---- Normalisierungs- und Cleaning-Funktion ----
 try:
     data = load_data(tickers, horizon_map[horizon])
 except Exception as e:
@@ -444,20 +444,19 @@ except Exception as e:
     st.error(f"Fehler beim Laden der Daten: {message}")
     st.stop()
 
-# Normalisieren und Spalten mit NaN entfernen
-normalized, removed_tickers = normalize_and_clean(data)
+# 2. Daten bereinigen UND die Variable 'normalized' erstellen
+# HIER WIRD DER FEHLER BEHOBEN! Wir rufen die Funktion auf.
+normalized, removed_tickers = normalized_and_clean(data)
 
-# Warnung wenn Aktien entfernt wurden
+# 3. Warnung, wenn Aktien entfernt wurden
 if removed_tickers:
     st.warning(f"⚠️ Folgende Aktien wurden entfernt (unvollständige Daten): {', '.join(sorted(removed_tickers))}")
-    tickers = list(normalized.columns)
+    tickers = list(normalized.columns) # Ticker-Liste aktualisieren
 
-# Wenn keine gültigen Daten übrig sind
+# 4. Stoppen, wenn keine Daten übrig sind
 if normalized.empty or len(normalized.columns) == 0:
     st.error("Keine gültigen Daten für diese Aktien und Zeitraum.")
     st.stop()
-#---Ende Fehlerbehandlung---
-
 
 # --- Berechnung der Performance ---
 latest_norm_values = {normalized[ticker].iat[-1]: ticker for ticker in tickers}
@@ -539,17 +538,17 @@ with right_cell:
 
 #Liste der Sektoren im NYSE
 sektoren_etfs = {
-    "Technology": "XLK",
-    "Health Care": "XLV",
-    "Financials": "XLF",
-        "Consumer Discretionary": "XLY",
-        "Communication Services": "XLC",
-        "Industrials": "XLI",
-        "Consumer Staples": "XLP",
-        "Energy": "XLE",
-        "Utilities": "XLU",
-        "Real Estate": "XLRE",
-        "Materials": "XLB"
+    "Technologie": "XLK",
+    "Gesundheitswesen": "XLV",
+    "Finanzwesen": "XLF",
+        "Nicht-Basiskonsumgüter": "XLY",
+        "Kommunikationsdienste": "XLC",
+        "Industrie": "XLI",
+        "Basiskonsumgüter": "XLP",
+        "Energie": "XLE",
+        "Versorger": "XLU",
+        "Immobilien": "XLRE",
+        "Rohstoffe": "XLB"
     }
 
 @st.cache_data(ttl="1h")
@@ -575,6 +574,9 @@ def get_sector_performance(horizon_days):
                     "Weight": 1 # Wir geben jedem Sektor hier das gleiche visuelle Gewicht
                 })
     return pd.DataFrame(results)
+
+from sektor_details import zeige_top_10_bereich
+
 
 #---Sektor Performance---
 st.title("Weltweite Sektor Performance")
@@ -610,6 +612,8 @@ if not df_perf.empty:
     fig.update_layout(margin=dict(t=50, l=10, r=10, b=10), height=500)
     #Chart zeigen
     st.plotly_chart(fig, use_container_width=True)
+    
+zeige_top_10_bereich()
 
 #---4 Zelle (TA- Technische Analysis)
 
