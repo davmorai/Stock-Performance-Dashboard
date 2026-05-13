@@ -6,6 +6,7 @@ from datetime import datetime
 import plotly.graph_objects as go
 import plotly.express as px
 import pytz
+import os
 
 st.set_page_config(
     page_title="Aktien Dashboard",
@@ -48,14 +49,34 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 
-# Name Check
+# Name checken und speichern in data.csv
+DATA_DIR = "data"
+NAME_FILE = os.path.join(DATA_DIR, "name.csv")
+
+
+def load_name():
+    if os.path.exists(NAME_FILE):
+        try:
+            df = pd.read_csv(NAME_FILE, header=None, encoding="utf-8")
+            if not df.empty:
+                return str(df.iloc[0, 0])
+        except Exception:
+            pass
+    return "Besucher"
+
+
+def save_name(name):
+    os.makedirs(DATA_DIR, exist_ok=True)
+    pd.DataFrame([name]).to_csv(NAME_FILE, index=False, header=False, encoding="utf-8")
+
+
 if 'name' not in st.session_state:
-    st.session_state.name = "Besucher"
+    st.session_state.name = load_name()
 if 'edit_mode' not in st.session_state:
     st.session_state.edit_mode = False
 
 
-# Logik für aktuelle Zeit und passende Begrüssung
+#--- Logik für aktuelle Zeit und passende Begrüssung---
 jetzt = datetime.now()
 stunde = jetzt.hour
 if stunde < 11:
@@ -94,6 +115,7 @@ with header_left:
         neuer_name = st.text_input("Name", value=st.session_state.name)
         if st.button("Speichern", key="save_name"):
             st.session_state.name = neuer_name
+            save_name(neuer_name)
             st.session_state.edit_mode = False
             st.rerun()
 
@@ -323,15 +345,17 @@ with top_left_cell:
         placeholder="Wähle eine Aktie aus. Beispiel: NVDA",
         accept_new_options=True,
     )
+
 #Zeitmapping
 horizon_map = {
-    "1 Monat": "1mo", "3 Monate": "3mo", "6 Monate": "6mo",
-    "1 Jahr": "1y", "5 Jahre": "5y", "10 Jahre": "10y", "20 Jahre": "20y",
+    "5 Tage": "5d", "1 Monat": "1mo", "3 Monate": "3mo", "6 Monate": "6mo",
+    "1 Jahr": "1y", "2 Jahre": "2y", "5 Jahre": "5y", "10 Jahre": "10y", "20 Jahre": "20y", "Max": "max"
 }
 
 #Zelle mit Zeithorizont Auswahl
 with top_left_cell:
-    horizon = st.pills("Zeithorizont", options=list(horizon_map.keys()), default="6 Monate")
+    selected_horizon = st.pills("Zeithorizont", options=list(horizon_map.keys()), default="6 Monate")
+    horizon = str(selected_horizon) if selected_horizon is not None else "6 Monate"
 
 
 #---Selektion Aktie---
@@ -353,21 +377,43 @@ right_cell = cols[1].container(border=True, height="stretch", vertical_alignment
 # ---- Normalisierungs- und Cleaning-Funktion ----
 def normalize_and_clean(data):
     """
-    Normalisiert Daten und entfernt Spalten mit NaN-Werten.
-    Gibt bereinigten DataFrame und Liste der entfernten Spalten zurück.
+    Normalisiert Daten und entfernt Spalten mit zu vielen fehlenden Werten.
+    - Spalten die komplett leer sind → entfernen
+    - Führende NaN-Reihen entfernen (z.B. erste Reihe bei 1y)
+    - Spalten bei denen NACH dem Entfernen der führenden NaN immer noch NaN bleiben → entfernen  
+    - Restliche Lücken füllen mit ffill/bfill
+    - Spalten mit noch verbleibenden NaN → entfernen
+    Normalisieren: erste gültige Reihe = 1.0
     """
-    # Spalten mit NaN entfernen
     before_cols = set(data.columns)
-    data_clean = data.dropna(axis=1, how='any')
-    after_cols = set(data_clean.columns)
+    data_clean = data.dropna(axis=1, how='all')
+    if data_clean.empty:
+        return data_clean, before_cols
+
+    # Führende NaN-Reihen entfernen (z.B. bei 1y-Daten)
+    # Finde den ersten Index, an dem mindestens eine Spalte gültig ist
+    first_valid_idx = None
+    for idx in data_clean.index:
+        if data_clean.loc[idx].notna().any():
+            first_valid_idx = idx
+            break
+    
+    if first_valid_idx is None:
+        return pd.DataFrame(), before_cols
+    
+    data_clean = data_clean.loc[first_valid_idx:]
+    
+    # Jetzt Spalten prüfen, die noch zu viele NaN haben
+    data_filled = data_clean.ffill().bfill()
+    data_valid = data_filled.dropna(axis=1, how='any')
+    after_cols = set(data_valid.columns)
     removed = before_cols - after_cols
-    
-    # Normalisieren (erste Reihe als Basis = 1.0)
-    if len(data_clean) > 0:
-        normalized = data_clean / data_clean.iloc[0]
+
+    if len(data_valid) > 0:
+        normalized = data_valid / data_valid.iloc[0]
     else:
-        normalized = data_clean
-    
+        normalized = data_valid
+
     return normalized, removed
 # ---- Ende Normalisierung ----
 
@@ -386,9 +432,16 @@ def load_data(tickers, period):
 #----Fehler Behandlung für YFinance Rate-Limit und leere Daten(passiert zb. bei ungültigen ticker)-----
 try:
     data = load_data(tickers, horizon_map[horizon])
-except yf.exceptions.YFRateLimitError as e:
-    st.warning("YFinance hat ein Rate-Limit erreicht :(\nBitte später versuchen.")
-    load_data.clear()
+except Exception as e:
+    message = str(e) or "Unbekannter Fehler beim Laden der Daten."
+    if "rate limit" in message.lower() or "429" in message:
+        st.warning("YFinance hat ein Rate-Limit erreicht :(\nBitte später versuchen.")
+        try:
+            load_data.clear()
+        except Exception:
+            pass
+        st.stop()
+    st.error(f"Fehler beim Laden der Daten: {message}")
     st.stop()
 
 # Normalisieren und Spalten mit NaN entfernen
@@ -504,7 +557,10 @@ def get_sector_performance(horizon_days):
     results = []
     # Alle Ticker auf einmal herunterladen für bessere Performance
     tickers = list(sektoren_etfs.values())
-    data = yf.download(tickers, period=f"{horizon_days}d")["Close"]
+    raw_data = yf.download(tickers, period=f"{horizon_days}d")
+    if raw_data is None or "Close" not in raw_data:
+        return pd.DataFrame(results)
+    data = raw_data["Close"]
     
     for name, ticker in sektoren_etfs.items():
         if ticker in data.columns:
@@ -520,8 +576,7 @@ def get_sector_performance(horizon_days):
                 })
     return pd.DataFrame(results)
 
-
-
+#---Sektor Performance---
 st.title("Weltweite Sektor Performance")
 
 # Slider für Zeiteinstellung
