@@ -92,8 +92,23 @@ STOCKS = [
     "WM",
     "WMT",
     "XOM",
-    "Birk",
+    "BIRK",
     "SRFM"
 ]
 #MAG7 als Default für Tests
 DEFAULT_STOCKS = ["AAPL", "MSFT", "GOOGL", "NVDA", "AMZN", "TSLA", "META"]
+
+#ETF Sektoren Performance
+SEKTOREN_ETFS = {
+    "Technologie": "XLK",
+    "Gesundheitswesen": "XLV",
+    "Finanzwesen": "XLF",
+    "Nicht-Basiskonsumgüter": "XLY",
+    "Kommunikationsdienste": "XLC",
+    "Industrie": "XLI",
+    "Basiskonsumgüter": "XLP",
+    "Energie": "XLE",
+    "Versorger": "XLU",
+    "Immobilien": "XLRE",
+    "Rohstoffe": "XLB"
+}

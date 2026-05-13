@@ -2,17 +2,21 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-from datetime import datetime
-import plotly.graph_objects as go
-import plotly.express as px
-import pytz
+import plotly.graph_objects as go #nur für Vix Widget
+import plotly.express as px #alle Plots
 import os
+
+from stocks import STOCKS, DEFAULT_STOCKS, SEKTOREN_ETFS as sektoren_etfs
+from time_logic import begruessung, aktuell, std_min, nyse_nasdaq, lse, tse, crypto, local_tz,jetzt
+from sektor_details import zeige_top_10_bereich
 
 st.set_page_config(
     page_title="Aktien Dashboard",
     page_icon=":chart_with_upwards_trend:",
     layout="wide",
 )
+# --- Speichervariablen initialisieren ---
+
 #--Header Zellen---
 # CSS Header
 st.markdown("""
@@ -49,7 +53,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 
-# Name checken und speichern in data.csv
+#---Name checken und speichern in data.csv---
 DATA_DIR = "data"
 NAME_FILE = os.path.join(DATA_DIR, "name.csv")
 
@@ -64,31 +68,22 @@ def load_name():
             pass
     return "Besucher"
 
-
 def save_name(name):
     os.makedirs(DATA_DIR, exist_ok=True)
     pd.DataFrame([name]).to_csv(NAME_FILE, index=False, header=False, encoding="utf-8")
 
+#---Edit Mode
 
 if 'name' not in st.session_state:
     st.session_state.name = load_name()
 if 'edit_mode' not in st.session_state:
     st.session_state.edit_mode = False
 
-
-#--- Logik für aktuelle Zeit und passende Begrüssung---
-jetzt = datetime.now()
-stunde = jetzt.hour
-if stunde < 11:
-    begruessung = "Good morning"
-elif 11 <= stunde < 18:
-    begruessung = "Good afternoon"
-else:
-    begruessung = "Good evening"
+#----Ende Name Check---
 
 
 # Datum, Begrüßung und VIX in einer Zeile
-header_left, header_right = st.columns([0.75, 0.25], gap="medium")
+header_left, header_right = st.columns([0.75, 0.25], gap="xsmall")
 
 #Name und Datum
 with header_left:
@@ -105,6 +100,7 @@ with header_left:
             ''',
             unsafe_allow_html=True,
         )
+        
     with edit_col:
         if not st.session_state.edit_mode:
             if st.button("✎", key="edit_name"):
@@ -119,20 +115,13 @@ with header_left:
             st.session_state.edit_mode = False
             st.rerun()
 
-    #----Zeit Logik für Öffnungszeiten
-    local_tz = pytz.timezone("Europe/Berlin")
-    aktuell = datetime.now(local_tz)
-    std_min = aktuell.strftime("%H:%M")  # Format 10:00
 
+    #Grün öffen/ Grau geschlossen
     color_active = "#4CAF50"  # Grün
     color_inactive = "#666"  # Grau
 
-    # MEZ 
-    nyse_nasdaq = "15:30" <= std_min <= "22:00"
-    lse = "09:30" <= std_min <= "17:30"
-    tse = "02:00" <= std_min <= "08:00"
+    #Logik von Öffnunszeiten
     crypto_color = color_active
-
     nyse_nasdaq_color = color_active if nyse_nasdaq else color_inactive
     lse_color = color_active if lse else color_inactive
     tse_color = color_active if tse else color_inactive
@@ -151,7 +140,6 @@ with header_left:
         """,
         unsafe_allow_html=True,
     )
-
 
 #---Datum und Begrüßung Ende---
 
@@ -201,123 +189,22 @@ with header_right:
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=0, r=0, t=0, b=0),
-            height=200,
-            width=150
+        # Gib links (l) und rechts (r) etwa 15-20 Pixel Platz für die Zahlen
+        # Unten (b) reichen ca. 10 Pixel, damit der Text nicht den Boden berührt
+            margin=dict(t=20, b=10, l=20, r=20), 
+            height=140,
+        # WICHTIG: Die Breite muss für einen Halbkreis bei 140px Höhe mindestens bei ca. 250 liegen!
+            width=250 
         )
 
         with st.container(border=True):
-            st.markdown('<div style="font-size: 0.85rem; color: #aaa; letter-spacing: 0.18em; text-transform: uppercase;">VIX INDEX</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size: 0.75rem; color: #aaa; letter-spacing: 0.15em; ''text-transform: uppercase; margin-bottom: -5px;">VIX</div>', unsafe_allow_html=True)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            st.markdown(f'<div style="text-align:center; color: {vix_color}; font-weight: 600; margin-top: -5px;">{vix_status}</div>', unsafe_allow_html=True)
-#---VIX Widget Ende---
+            st.markdown(f'<div style="text-align:center; color: {vix_color}; font-weight: 600; font-size: 0.8rem; margin-top: -8px;">{vix_status}</div>', unsafe_allow_html=True)
 
+#---VIX Widget Ende---
 #---Header Ende---
 
-#---Liste der Aktien---
-# Später abändern 
-STOCKS = [
-    "AAPL",
-    "ABBV",
-    "ACN",
-    "ADBE",
-    "ADP",
-    "AMD",
-    "AMGN",
-    "AMT",
-    "AMZN",
-    "APD",
-    "AVGO",
-    "AXP",
-    "BA",
-    "BK",
-    "BKNG",
-    "BMY",
-    "BSX",
-    "C",
-    "CAT",
-    "CI",
-    "CL",
-    "CMCSA",
-    "COST",
-    "CRM",
-    "CSCO",
-    "CVX",
-    "DE",
-    "DHR",
-    "DIS",
-    "DUK",
-    "ELV",
-    "EOG",
-    "EQR",
-    "FDX",
-    "GD",
-    "GE",
-    "GILD",
-    "GOOG",
-    "GOOGL",
-    "HD",
-    "HON",
-    "HUM",
-    "IBM",
-    "ICE",
-    "INTC",
-    "ISRG",
-    "JNJ",
-    "JPM",
-    "KO",
-    "LIN",
-    "LLY",
-    "LMT",
-    "LOW",
-    "MA",
-    "MCD",
-    "MDLZ",
-    "META",
-    "MO",
-    "MRK",
-    "MSFT",
-    "NEE",
-    "NFLX",
-    "NKE",
-    "NOW",
-    "NVDA",
-    "ORCL",
-    "PEP",
-    "PFE",
-    "PG",
-    "PLD",
-    "PM",
-    "PSA",
-    "REGN",
-    "RTX",
-    "SBUX",
-    "SCHW",
-    "SLB",
-    "SO",
-    "SPGI",
-    "T",
-    "TJX",
-    "TMO",
-    "TSLA",
-    "TXN",
-    "UNH",
-    "UNP",
-    "UPS",
-    "V",
-    "VZ",
-    "WFC",
-    "WM",
-    "WMT",
-    "XOM",
-    "BIRK",
-    "SRFM"
-]
-
-#MAG7 als Default für Tests
-DEFAULT_STOCKS = ["AAPL", "MSFT", "GOOGL", "NVDA", "AMZN", "TSLA", "META"]
-
-#---Ende Liste---
 
 #---Anpassungen/ Hinzufügen von Aktien---
 #falls stocks nicht in liste dann werden Sie dazugefügt, damit sie in der Auswahl auftauchen
@@ -329,7 +216,7 @@ if "tickers_input" not in st.session_state:
         "stocks", stocks_to_str(DEFAULT_STOCKS)
     ).split(",")
 
-#---Ende Anpassungen---
+#---Ende Anpassungen/ Hinzufügen von Aktien---
 
 
 #---2 Zellen Layout---
@@ -378,13 +265,13 @@ right_cell = cols[1].container(border=True, height="stretch", vertical_alignment
 # ---- Normalisierungs- und Cleaning-Funktion ----
 def normalized_and_clean(data):
     """
-    Normalisiert Daten und entfernt Spalten mit zu vielen fehlenden Werten.
+    Normalisiert Daten und entfernt Spalten mit fehlenden Werten.
     - Spalten die komplett leer sind → entfernen
     - Führende NaN-Reihen entfernen (z.B. erste Reihe bei 1y)
-    - Spalten bei denen NACH dem Entfernen der führenden NaN immer noch NaN bleiben → entfernen  
+    - Spalten mit NaN in der Mitte oder am Ende → entfernen (Aktie nicht mehr im System)
     - Restliche Lücken füllen mit ffill/bfill
-    - Spalten mit noch verbleibenden NaN → entfernen
     Normalisieren: erste gültige Reihe = 1.0
+
     """
     before_cols = set(data.columns)
     data_clean = data.dropna(axis=1, how='all')
@@ -392,7 +279,6 @@ def normalized_and_clean(data):
         return data_clean, before_cols
 
     # Führende NaN-Reihen entfernen (z.B. bei 1y-Daten)
-    # Finde den ersten Index, an dem mindestens eine Spalte gültig ist
     first_valid_idx = None
     for idx in data_clean.index:
         if data_clean.loc[idx].notna().any():
@@ -404,9 +290,13 @@ def normalized_and_clean(data):
     
     data_clean = data_clean.loc[first_valid_idx:]
     
-    # Jetzt Spalten prüfen, die noch zu viele NaN haben
-    data_filled = data_clean.ffill().bfill()
-    data_valid = data_filled.dropna(axis=1, how='any')
+    # Spalten prüfen auf fehlende Daten in der Mitte oder am Ende
+    data_valid = data_clean.ffill().bfill()  # Füllen für temporäre Lücken
+    
+    # Aber: Spalten mit NaN-Werten in den Original-Daten entfernen
+    # Das erkennt Aktien, die während des Zeitraums verschwunden sind
+    data_valid = data_valid[data_clean.columns[data_clean.notna().sum() == len(data_clean)]]
+    
     after_cols = set(data_valid.columns)
     removed = before_cols - after_cols
 
@@ -446,15 +336,13 @@ except Exception as e:
     st.stop()
 
 # 2. Daten bereinigen UND die Variable 'normalized' erstellen
-# HIER WIRD DER FEHLER BEHOBEN! Wir rufen die Funktion auf.
 normalized, removed_tickers = normalized_and_clean(data)
 
-# 3. Warnung, wenn Aktien entfernt wurden
+#Warnung raising falls was nicht stimmt
 if removed_tickers:
     st.warning(f"⚠️ Folgende Aktien wurden entfernt (unvollständige Daten): {', '.join(sorted(removed_tickers))}")
     tickers = list(normalized.columns) # Ticker-Liste aktualisieren
 
-# 4. Stoppen, wenn keine Daten übrig sind
 if normalized.empty or len(normalized.columns) == 0:
     st.error("Keine gültigen Daten für diese Aktien und Zeitraum.")
     st.stop()
@@ -526,7 +414,7 @@ with right_cell:
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='#aaa'),
         hovermode='x unified',
-        margin=dict(l=50, r=50, t=60, b=50),
+        margin=dict(l=30, r=30, t=50, b=40),
         xaxis_title="Datum",
         yaxis_title="Normalisierter Preis"
     )
@@ -537,84 +425,74 @@ with right_cell:
 
 #---3 Zellen Layout für weitere Analysen---
 
-#Liste der Sektoren im NYSE
-sektoren_etfs = {
-    "Technologie": "XLK",
-    "Gesundheitswesen": "XLV",
-    "Finanzwesen": "XLF",
-        "Nicht-Basiskonsumgüter": "XLY",
-        "Kommunikationsdienste": "XLC",
-        "Industrie": "XLI",
-        "Basiskonsumgüter": "XLP",
-        "Energie": "XLE",
-        "Versorger": "XLU",
-        "Immobilien": "XLRE",
-        "Rohstoffe": "XLB"
-    }
+st.divider()
+
+"""
+
+
+Hier kommt was schönes!
+
+
+
+"""
+
+#---Sektor Performance---
+st.divider()
+
+st.title("Weltweite Sektor Performance")
 
 @st.cache_data(ttl="1h")
 def get_sector_performance(horizon_days):
-    results = []
-    # Alle Ticker auf einmal herunterladen für bessere Performance
     tickers = list(sektoren_etfs.values())
     raw_data = yf.download(tickers, period=f"{horizon_days}d")
-    if raw_data is None or "Close" not in raw_data:
-        return pd.DataFrame(results)
-    data = raw_data["Close"]
+    results = []
     
-    for name, ticker in sektoren_etfs.items():
-        if ticker in data.columns:
-            series = data[ticker].dropna()
-            if len(series) > 1:
-                # Performance berechnen: (Endpreis / Startpreis) - 1
-                perf = (series.iloc[-1] / series.iloc[0] - 1) * 100
-                results.append({
-                    "Sektor": name,
-                    "Ticker": ticker,
-                    "Performance %": round(perf, 2),
-                    "Weight": 1 # Wir geben jedem Sektor hier das gleiche visuelle Gewicht
-                })
+    if raw_data is not None and "Close" in raw_data:
+        data = raw_data["Close"]
+        for name, ticker in sektoren_etfs.items():
+            if ticker in data.columns:
+                series = data[ticker].dropna()
+                if len(series) > 1:
+                    perf = (series.iloc[-1] / series.iloc[0] - 1) * 100
+                    results.append({
+                        "Sektor": name,
+                        "Performance %": round(perf, 2)
+                    })
     return pd.DataFrame(results)
 
-from sektor_details import zeige_top_10_bereich
 
-
-#---Sektor Performance---
-st.title("Weltweite Sektor Performance")
-
-# Slider für Zeiteinstellung
-zeit_map = {"1 Woche": 7, "1 Monat": 30, "6 Monate": 180, "1 Jahr": 365,"5 Jahr":1825}
+zeit_map = {"1 Woche": 7, "1 Monat": 30, "6 Monate": 180, "1 Jahr": 365, "5 Jahr": 1825}
 auswahl = st.select_slider("Zeitraum wählen", options=list(zeit_map.keys()), value="1 Monat")
 
 df_perf = get_sector_performance(zeit_map[auswahl])
 
-# Heatmap (Treemap) erstellen
 if not df_perf.empty:
-    fig = px.treemap(
+    df_perf["Weight"] = 1
+    
+    fig_tree = px.treemap(
         df_perf,
-        path=["Sektor"], 
-        values="Weight", 
+        path=["Sektor"],
+        values="Weight",
         color="Performance %",
-        color_continuous_scale="RdYlGn", 
+        color_continuous_scale="RdYlGn",
         color_continuous_midpoint=0,
-        # Wir übergeben die Performance-Daten als custom_data für den Hover/Text
-        custom_data=["Performance %", "Ticker"],
-        title="Sektor Performance Übersicht" # Titel muss ein String sein, keine Liste!
+        custom_data=["Performance %"]
     )
-
-    # Hier definieren wir, was auf der Kachel stehen soll
-    # %{label} ist der Name des Sektors, %{customdata[0]} ist die Performance
-    fig.update_traces(
+    
+    fig_tree.update_traces(
         texttemplate="<b>%{label}</b><br>%{customdata[0]:.2f}%",
         textposition="middle center",
         textfont_size=16
     )
-    #Layout Einstellungen
-    fig.update_layout(margin=dict(t=50, l=10, r=10, b=10), height=500)
-    #Chart zeigen
-    st.plotly_chart(fig, use_container_width=True)
+    fig_tree.update_layout(margin=dict(t=10, l=10, r=10, b=10), height=500)
     
-zeige_top_10_bereich()
+    st.caption("💡 Klicke auf einen Sektor, um Top 10 Unternehmen im jeweiligen Sektor anzuzeigen.")
+
+    event = st.plotly_chart(fig_tree, use_container_width=True, on_select="rerun")
+    
+    if event and len(event.selection.points) > 0:
+        sektor = event.selection.points[0]["label"]
+        zeige_top_10_bereich(sektor)
 
 #---4 Zelle (TA- Technische Analysis)
 
