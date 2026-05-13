@@ -202,7 +202,8 @@ with header_right:
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             margin=dict(l=0, r=0, t=0, b=0),
-            height=180,
+            height=200,
+            width=150
         )
 
         with st.container(border=True):
@@ -349,7 +350,7 @@ with top_left_cell:
 #Zeitmapping
 horizon_map = {
     "5 Tage": "5d", "1 Monat": "1mo", "3 Monate": "3mo", "6 Monate": "6mo",
-    "1 Jahr": "1y", "2 Jahre": "2y", "5 Jahre": "5y", "10 Jahre": "10y", "20 Jahre": "20y", "Max": "max"
+    "1 Jahr": "1y", "2 Jahre": "2y", "5 Jahre": "5y", "10 Jahre": "10y", "20 Jahre": "20y", "Max.": "max"
 }
 
 #Zelle mit Zeithorizont Auswahl
