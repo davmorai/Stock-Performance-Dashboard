@@ -2,13 +2,15 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import plotly.graph_objects as go #nur für Vix Widget
 import plotly.express as px #alle Plots
 import os
 
 from stocks import STOCKS, DEFAULT_STOCKS, SEKTOREN_ETFS as sektoren_etfs
 from time_logic import begruessung, aktuell, std_min, nyse_nasdaq, lse, tse, crypto, local_tz,jetzt
 from sektor_details import zeige_top_10_bereich
+from technical_analysis import get_ta_summary_for_ticker
+from vix import render_vix_widget
+
 
 st.set_page_config(
     page_title="Aktien Dashboard",
@@ -146,61 +148,7 @@ with header_left:
 
 #---VIX Widget---
 with header_right:
-    vix_value = None
-    try:
-        vix = yf.Ticker("^VIX")
-        vix_data = vix.history(period="1d")
-        if not vix_data.empty:
-            vix_value = round(vix_data['Close'].iloc[-1], 1)
-    except Exception:
-        vix_value = None
-
-    if vix_value is None:
-        st.markdown('<div style="color: #aaa; font-size: 0.85rem;">VIX data unavailable</div>', unsafe_allow_html=True)
-    else:
-        if vix_value < 15:
-            vix_status = "Low"
-            vix_color = "#4CAF50"
-        elif vix_value < 25:
-            vix_status = "Moderate"
-            vix_color = "#FFB300"
-        else:
-            vix_status = "High"
-            vix_color = "#FF4B4B"
-
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=vix_value,
-            number={'font': {'color': '#ffffff', 'size': 26}},
-            gauge={
-                'axis': {'range': [None, 80], 'tickwidth': 1, 'tickcolor': '#999'},
-                'bar': {'color': vix_color},
-                'bgcolor': '#1f2937',
-                'borderwidth': 0,
-                'steps': [
-                    {'range': [0, 15], 'color': "#1e5e42"},
-                    {'range': [15, 25], 'color': "#725d1e"},
-                    {'range': [25, 80], 'color': "#551d1d"},
-                ],
-            },
-            domain={'x': [0, 1], 'y': [0, 1]},
-        ))
-
-        fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-        # Gib links (l) und rechts (r) etwa 15-20 Pixel Platz für die Zahlen
-        # Unten (b) reichen ca. 10 Pixel, damit der Text nicht den Boden berührt
-            margin=dict(t=20, b=10, l=20, r=20), 
-            height=140,
-        # WICHTIG: Die Breite muss für einen Halbkreis bei 140px Höhe mindestens bei ca. 250 liegen!
-            width=250 
-        )
-
-        with st.container(border=True):
-            st.markdown('<div style="font-size: 0.75rem; color: #aaa; letter-spacing: 0.15em; ''text-transform: uppercase; margin-bottom: -5px;">VIX</div>', unsafe_allow_html=True)
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            st.markdown(f'<div style="text-align:center; color: {vix_color}; font-weight: 600; font-size: 0.8rem; margin-top: -8px;">{vix_status}</div>', unsafe_allow_html=True)
+    render_vix_widget()
 
 #---VIX Widget Ende---
 #---Header Ende---
@@ -427,19 +375,42 @@ with right_cell:
 
 st.divider()
 
-"""
+st.subheader("Technische Analyse")
+st.markdown(
+    "Zeigt die wichtigsten technischen Kennzahlen für die aktuell ausgewählten Aktien.\n" 
+    " Die Werte basieren auf dem Tageschart und werden automatisch aktualisiert.",
+    unsafe_allow_html=True,
+)
+
+summary_rows = []
+for ticker in tickers:
+    summary_rows.append(get_ta_summary_for_ticker(ticker, horizon_map[horizon]))
+
+summary_df = pd.DataFrame(summary_rows).set_index("Ticker")
+
+if summary_df.empty:
+    st.warning("Für die ausgewählten Aktien konnten keine technischen Kennzahlen berechnet werden.")
+else:
+    st.dataframe(summary_df, use_container_width=True)
+
+    first_ticker = summary_df.index[0]
+    first_values = summary_df.loc[first_ticker]
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("Ticker", first_ticker)
+    metric_cols[1].metric("RSI 14", f"{first_values['RSI 14']}")
+    metric_cols[2].metric("Trend", first_values['Trend'])
+    metric_cols[3].metric("ATR 14", f"{first_values['ATR 14']}")
 
 
-Hier kommt was schönes!
 
 
 
-"""
+
 
 #---Sektor Performance---
 st.divider()
 
-st.title("Weltweite Sektor Performance")
+st.title("Weltweite ETF-Sektorperformance")
 
 @st.cache_data(ttl="1h")
 def get_sector_performance(horizon_days):
@@ -461,8 +432,8 @@ def get_sector_performance(horizon_days):
     return pd.DataFrame(results)
 
 
-zeit_map = {"1 Woche": 7, "1 Monat": 30, "6 Monate": 180, "1 Jahr": 365, "5 Jahr": 1825}
-auswahl = st.select_slider("Zeitraum wählen", options=list(zeit_map.keys()), value="1 Monat")
+zeit_map = {"1 Woche": 7, "1 Monat": 30, "6 Monate": 180, "1 Jahr": 365, "5 Jahre": 1825}
+auswahl = st.pills("Zeitraum wählen", options=list(zeit_map.keys()), default="1 Monat")
 
 df_perf = get_sector_performance(zeit_map[auswahl])
 
