@@ -2,12 +2,13 @@ import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
 
+
 VIX_TICKER = "^VIX"
 VIX_MAX_RANGE = 80
 
 
 def fetch_vix_value():
-    """Fetch the latest VIX close value from yfinance."""
+    """Daten holen von yfinance VIX data"""
     try:
         vix = yf.Ticker(VIX_TICKER)
         vix_data = vix.history(period="1d")
@@ -19,7 +20,7 @@ def fetch_vix_value():
 
 
 def get_vix_status(vix_value):
-    """Return the textual status and color for the given VIX value."""
+    """Farbenskala"""
     if vix_value < 15:
         return "Low", "#4CAF50"
     if vix_value < 25:
@@ -28,7 +29,7 @@ def get_vix_status(vix_value):
 
 
 def build_vix_figure(vix_value, vix_color):
-    """Build the Plotly gauge figure for the VIX widget."""
+    """Gauge Figure Plotly"""
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=vix_value,
@@ -58,7 +59,7 @@ def build_vix_figure(vix_value, vix_color):
 
 
 def render_vix_widget():
-    """Render the VIX widget inside a Streamlit container."""
+    """Vix Widget rendern"""
     vix_value = fetch_vix_value()
     if vix_value is None:
         st.markdown('<div style="color: #aaa; font-size: 0.85rem;">VIX data unavailable</div>', unsafe_allow_html=True)

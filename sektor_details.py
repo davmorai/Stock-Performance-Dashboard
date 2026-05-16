@@ -50,7 +50,7 @@ def get_top_10_data(sector_name):
         df = df.sort_values(by="Market Cap", ascending=False).reset_index(drop=True)
     return df
 
-# POP UP
+# POP UP menü anzeigen mit top10
 @st.dialog("🔍 Sektor Details", width="large")
 
 def zeige_top_10_bereich(geklickter_sektor):

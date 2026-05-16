@@ -19,9 +19,12 @@ Techstacks with Test ground
 
 Issues as rn:
 
--Data in the 1 year period is shown with NA which must be corrected
+-Data in the 1 year period is shown with NA which must be corrected  #FIXED issue with st.pills
 but as rn there is a complication between the 1y plot and error raising when data/stock doesnt exist
-but is still shown as existing with a base 1 which is standart
+but is still shown as existing with a base 1 which is standart 
+
+-Pop up menu
+-Saturday and Sunday shows as open but its closed.
 
 
 Aiming to:

@@ -10,7 +10,7 @@ def _import_ta_class(module_name: str, class_name: str):
         return getattr(module, class_name)
     except ImportError as exc:
         raise ImportError(
-            "Please install the 'ta' package for technical analysis features. "
+            "technical Analysis paket notwendig"
             "Run: pip install ta"
         ) from exc
 
@@ -24,7 +24,7 @@ def _normalize_yfinance_columns(data: pd.DataFrame) -> pd.DataFrame:
 
 @st.cache_data(ttl=6 * 60 * 60)
 def load_ohlcv_data(ticker: str, period: str) -> pd.DataFrame:
-    """Load OHLCV data for a single ticker from yfinance."""
+    """OHLCV Data laden"""
     data = yf.download(ticker, period=period, interval="1d")
     if data is None or data.empty:
         return pd.DataFrame()
@@ -41,7 +41,7 @@ def _ensure_series(series_or_frame):
 
 
 def compute_ta_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute a common set of technical indicators for an OHLCV DataFrame."""
+    """Data in dataframe umwandeln"""
     if df.empty:
         return df
 
@@ -89,7 +89,7 @@ def compute_ta_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_ta_summary_for_ticker(ticker: str, period: str) -> pd.Series:
-    """Return the latest technical analysis summary for a ticker."""
+    """Letzte Ticker Info anzeigen"""
     df = load_ohlcv_data(ticker, period)
     if df.empty:
         return pd.Series({"Ticker": ticker})

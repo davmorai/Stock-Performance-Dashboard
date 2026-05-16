@@ -372,7 +372,7 @@ with right_cell:
 
 
 #---3 Zellen Layout für weitere Analysen---
-
+#---Technisch Analyse---
 st.divider()
 
 st.subheader("Technische Analyse")
@@ -384,7 +384,12 @@ st.markdown(
 
 summary_rows = []
 for ticker in tickers:
-    summary_rows.append(get_ta_summary_for_ticker(ticker, horizon_map[horizon]))
+    # bei Zeithorizont von 5 tage werden aufgrund von 
+    # fehlenden daten die daten von 1 mo genommen und genügend datenpunkte anzuzeigen
+    ta_horizon = horizon_map[horizon]
+    if ta_horizon == "5d":
+        ta_horizon = "1mo"    
+    summary_rows.append(get_ta_summary_for_ticker(ticker, ta_horizon))
 
 summary_df = pd.DataFrame(summary_rows).set_index("Ticker")
 
@@ -400,11 +405,7 @@ else:
     metric_cols[1].metric("RSI 14", f"{first_values['RSI 14']}")
     metric_cols[2].metric("Trend", first_values['Trend'])
     metric_cols[3].metric("ATR 14", f"{first_values['ATR 14']}")
-
-
-
-
-
+#---Ende TA---
 
 
 #---Sektor Performance---
@@ -435,6 +436,8 @@ def get_sector_performance(horizon_days):
 zeit_map = {"1 Woche": 7, "1 Monat": 30, "6 Monate": 180, "1 Jahr": 365, "5 Jahre": 1825}
 auswahl = st.pills("Zeitraum wählen", options=list(zeit_map.keys()), default="1 Monat")
 
+if auswahl is None:
+    auswahl = "1 Monat"
 df_perf = get_sector_performance(zeit_map[auswahl])
 
 if not df_perf.empty:
@@ -460,26 +463,13 @@ if not df_perf.empty:
     st.caption("💡 Klicke auf einen Sektor, um Top 10 Unternehmen im jeweiligen Sektor anzuzeigen.")
 
     event = st.plotly_chart(fig_tree, use_container_width=True, on_select="rerun")
+
+ # Wir nutzen .get(), um Abstürze zu verhindern, falls "selection" oder "points" leer sind
+    if event and len(event.get("selection", {}).get("points", [])) > 0:
+    # Eckige Klammern für den Dictionary-Zugriff nutzen
+        sektor = event["selection"]["points"][0].get("label")
     
-    if event and len(event.selection.points) > 0:
-        sektor = event.selection.points[0]["label"]
-        zeige_top_10_bereich(sektor)
-
-#---4 Zelle (TA- Technische Analysis)
-
-#RSI
-
-
-#MCDA
-
-#Volume
-
-#Options Trend
-
-#
-
-
-#---Ende TA---
-
+        if sektor:  # Nur ausführen, wenn auch wirklich ein Sektor (Label) gefunden wurde
+            zeige_top_10_bereich(sektor)
 
 #--- 5 Zeile News---
