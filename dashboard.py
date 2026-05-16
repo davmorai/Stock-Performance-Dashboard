@@ -11,6 +11,9 @@ from sektor_details import zeige_top_10_bereich
 from technical_analysis import get_ta_summary_for_ticker
 from vix import render_vix_widget
 
+#Session State für das problem mit rerun
+if "last_clicked_sector" not in st.session_state:
+    st.session_state.last_clicked_sector = None
 
 st.set_page_config(
     page_title="Aktien Dashboard",
@@ -144,8 +147,6 @@ with header_left:
     )
 
 #---Datum und Begrüßung Ende---
-
-
 #---VIX Widget---
 with header_right:
     render_vix_widget()
@@ -283,7 +284,7 @@ except Exception as e:
     st.error(f"Fehler beim Laden der Daten: {message}")
     st.stop()
 
-# 2. Daten bereinigen UND die Variable 'normalized' erstellen
+#Daten bereinigen UND die Variable 'normalized' erstellen
 normalized, removed_tickers = normalized_and_clean(data)
 
 #Warnung raising falls was nicht stimmt
@@ -375,7 +376,7 @@ with right_cell:
 #---Technisch Analyse---
 st.divider()
 
-st.subheader("Technische Analyse")
+st.header("Technische Analyse")
 st.markdown(
     "Zeigt die wichtigsten technischen Kennzahlen für die aktuell ausgewählten Aktien.\n" 
     " Die Werte basieren auf dem Tageschart und werden automatisch aktualisiert.",
@@ -461,15 +462,31 @@ if not df_perf.empty:
     fig_tree.update_layout(margin=dict(t=10, l=10, r=10, b=10), height=500)
     
     st.caption("💡 Klicke auf einen Sektor, um Top 10 Unternehmen im jeweiligen Sektor anzuzeigen.")
-
-    event = st.plotly_chart(fig_tree, use_container_width=True, on_select="rerun")
-
- # Wir nutzen .get(), um Abstürze zu verhindern, falls "selection" oder "points" leer sind
-    if event and len(event.get("selection", {}).get("points", [])) > 0:
-    # Eckige Klammern für den Dictionary-Zugriff nutzen
-        sektor = event["selection"]["points"][0].get("label")
     
-        if sektor:  # Nur ausführen, wenn auch wirklich ein Sektor (Label) gefunden wurde
-            zeige_top_10_bereich(sektor)
+#---FIXED rerun klick logik
 
-#--- 5 Zeile News---
+    #Dynamische Key, zwingt Streamlit alte Klicks zu vergessen
+    chart_key = f"treemap_sektor_{auswahl}"
+
+    #Chart zeigen
+    event = st.plotly_chart(
+        fig_tree, 
+        use_container_width=True, 
+        on_select="rerun", 
+        key=chart_key
+    )
+
+    # Klick-login auswerten mit Türsteher funktion
+    if event and len(event.get("selection", {}).get("points", [])) > 0:
+        sektor = event["selection"]["points"][0].get("label")
+        
+        if sektor:
+            #prüft ob Sektor geklickt wurde
+            if st.session_state.last_clicked_sector != sektor:
+                # merkt ob es offen ist
+                st.session_state.last_clicked_sector = sektor 
+                # Zeigt Popup
+                zeige_top_10_bereich(sektor)
+    else:
+        #falls kein klick, wird es zurückgesetzt
+        st.session_state.last_clicked_sector = None
