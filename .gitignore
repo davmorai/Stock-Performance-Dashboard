@@ -1,3 +1,10 @@
+.vscode/
+iframe_figures/
+data/name.csv
+__pycache__/
+*.pyc
+.env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
