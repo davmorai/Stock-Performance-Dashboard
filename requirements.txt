@@ -1,8 +1,7 @@
 yfinance #daten
-json #daten format?
 plotly#ploting
 plotly.express #ploting
 pandas #arrays
-numpy#math tools
 streamlit #Interface
 ta #technical analysis tools
+ZoneInfo #timezone
