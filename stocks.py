@@ -113,7 +113,7 @@ SEKTOREN_ETFS = {
     "Rohstoffe": "XLB"
 }
 
-top_10_sektoren = {
+TOP_10_SEKTOREN = {
     "Technologie": ["AAPL", "MSFT", "NVDA", "AVGO", "ORCL", "ADBE", "CRM", "AMD", "ACN", "CSCO"],
     "Gesundheitswesen": ["LLY", "UNH", "JNJ", "MRK", "ABBV", "TMO", "DHR", "ABT", "PFE", "AMGN"],
     "Finanzwesen": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "SPGI", "GS", "MS", "AXP"],
