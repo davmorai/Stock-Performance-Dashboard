@@ -1,4 +1,4 @@
-# 📈 Aktien Dashboard
+# Stock Performance Dashboard
 
 A personal stock market dashboard built with Streamlit — featuring portfolio tracking, sector heatmaps, technical analysis, and real-time market data via yfinance.
 
@@ -101,7 +101,7 @@ All tuneable constants live in `config.py`:
 
 - [ ] News feed with sentiment analysis or economic calendar
 - [ ] Additional TA indicators and signal overlays
-- [ ] Expand stock universe beyond US markets
+- [ ] Expand stock universe beyond US markets and overall Global Etf's
 - [ ] Unit tests for data utilities and TA computations
 
 ---
