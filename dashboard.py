@@ -18,7 +18,7 @@ from config import (
 
 #Seite konfigurieren
 st.set_page_config(
-    page_title="Aktien Dashboard",
+    page_title="Stock Performance Dashboard",
     page_icon=":chart_with_upwards_trend:",
     layout="wide",
 )
