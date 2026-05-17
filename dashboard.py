@@ -3,7 +3,6 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.express as px #alle Plots
-import os
 
 from stocks import STOCKS, DEFAULT_STOCKS, SEKTOREN_ETFS as sektoren_etfs
 from time_logic import begruessung, aktuell, std_min, nyse_nasdaq, lse, tse, crypto, local_tz
@@ -11,6 +10,14 @@ from sektor_details import zeige_top_10_bereich
 from technical_analysis import get_ta_summary_for_ticker
 from vix import render_vix_widget
 from styles import apply_custom_css
+from utils import load_name, save_name, normalized_and_clean
+from config import (
+    COLOR_MARKET_OPEN,
+    COLOR_MARKET_CLOSED,
+    HORIZON_MAP,
+    SEKTOR_ZEIT_MAP,
+    CACHE_TTL_KURSE,
+)#einzelne config Konstanten
 
 #Session State für das problem mit rerun
 if "last_clicked_sector" not in st.session_state:
@@ -26,27 +33,6 @@ st.set_page_config(
 #--Header Zellen---
 # CSS Header
 apply_custom_css()
-
-#---Name checken und speichern in data.csv---
-DATA_DIR = "data"
-NAME_FILE = os.path.join(DATA_DIR, "name.csv")
-
-
-def load_name():
-    if os.path.exists(NAME_FILE):
-        try:
-            df = pd.read_csv(NAME_FILE, header=None, encoding="utf-8")
-            if not df.empty:
-                return str(df.iloc[0, 0])
-        except Exception:
-            pass
-    return "Besucher"
-
-def save_name(name):
-    os.makedirs(DATA_DIR, exist_ok=True)
-    pd.DataFrame([name]).to_csv(NAME_FILE, index=False, header=False, encoding="utf-8")
-
-#---Edit Mode
 
 if 'name' not in st.session_state:
     st.session_state.name = load_name()
@@ -90,15 +76,11 @@ with header_left:
             st.rerun()
 
 
-    #Grün öffen/ Grau geschlossen
-    color_active = "#4CAF50"  # Grün
-    color_inactive = "#666"  # Grau
-
     #Logik von Öffnunszeiten
-    crypto_color = color_active
-    nyse_nasdaq_color = color_active if nyse_nasdaq else color_inactive
-    lse_color = color_active if lse else color_inactive
-    tse_color = color_active if tse else color_inactive
+    crypto_color = COLOR_MARKET_OPEN
+    nyse_nasdaq_color = COLOR_MARKET_OPEN if nyse_nasdaq else COLOR_MARKET_CLOSED
+    lse_color = COLOR_MARKET_OPEN if lse else COLOR_MARKET_CLOSED
+    tse_color = COLOR_MARKET_OPEN if tse else COLOR_MARKET_CLOSED
     #---Zeit Logik Ende---
 
     st.markdown('<p style="color: #888; font-size: 1rem; margin: 0.3rem;">Marktübersicht & Portfolio Tracker</p>', unsafe_allow_html=True)
@@ -152,15 +134,9 @@ with top_left_cell:
         accept_new_options=True,
     )
 
-#Zeitmapping
-horizon_map = {
-    "5 Tage": "5d", "1 Monat": "1mo", "3 Monate": "3mo", "6 Monate": "6mo",
-    "1 Jahr": "1y", "2 Jahre": "2y", "5 Jahre": "5y", "10 Jahre": "10y", "20 Jahre": "20y", "Max.": "max"
-}
-
 #Zelle mit Zeithorizont Auswahl
 with top_left_cell:
-    selected_horizon = st.pills("Zeithorizont", options=list(horizon_map.keys()), default="6 Monate")
+    selected_horizon = st.pills("Zeithorizont", options=list(HORIZON_MAP.keys()), default="6 Monate")
     horizon = str(selected_horizon) if selected_horizon is not None else "6 Monate"
 
 
@@ -179,54 +155,6 @@ if not tickers:
 right_cell = cols[1].container(border=True, height="stretch", vertical_alignment="center")
 #---Ende Selektion---
 
-
-# ---- Normalisierungs- und Cleaning-Funktion ----
-def normalized_and_clean(data):
-    """
-    Normalisiert Daten und entfernt Spalten mit fehlenden Werten.
-    - Spalten die komplett leer sind → entfernen
-    - Führende NaN-Reihen entfernen (z.B. erste Reihe bei 1y)
-    - Spalten mit NaN in der Mitte oder am Ende → entfernen (Aktie nicht mehr im System)
-    - Restliche Lücken füllen mit ffill/bfill
-    Normalisieren: erste gültige Reihe = 1.0
-
-    """
-    before_cols = set(data.columns)
-    data_clean = data.dropna(axis=1, how='all')
-    if data_clean.empty:
-        return data_clean, before_cols
-
-    # Führende NaN-Reihen entfernen (z.B. bei 1y-Daten)
-    first_valid_idx = None
-    for idx in data_clean.index:
-        if data_clean.loc[idx].notna().any():
-            first_valid_idx = idx
-            break
-    
-    if first_valid_idx is None:
-        return pd.DataFrame(), before_cols
-    
-    data_clean = data_clean.loc[first_valid_idx:]
-    
-    # Spalten prüfen auf fehlende Daten in der Mitte oder am Ende
-    data_valid = data_clean.ffill().bfill()  # Füllen für temporäre Lücken
-    
-    # Aber: Spalten mit NaN-Werten in den Original-Daten entfernen
-    # Das erkennt Aktien, die während des Zeitraums verschwunden sind
-    data_valid = data_valid[data_clean.columns[data_clean.notna().sum() == len(data_clean)]]
-    
-    after_cols = set(data_valid.columns)
-    removed = before_cols - after_cols
-
-    if len(data_valid) > 0:
-        normalized = data_valid / data_valid.iloc[0]
-    else:
-        normalized = data_valid
-
-    return normalized, removed
-# ---- Ende Normalisierung ----
-
-
 #----erlaubt schnelleres Laden der Daten/ Caching---
 @st.cache_resource(show_spinner=False, ttl="6h")
 def load_data(tickers, period):
@@ -240,7 +168,7 @@ def load_data(tickers, period):
 
 # ---- Normalisierungs- und Cleaning-Funktion ----
 try:
-    data = load_data(tickers, horizon_map[horizon])
+    data = load_data(tickers, HORIZON_MAP[horizon])
 except Exception as e:
     message = str(e) or "Unbekannter Fehler beim Laden der Daten."
     if "rate limit" in message.lower() or "429" in message:
@@ -356,7 +284,7 @@ summary_rows = []
 for ticker in tickers:
     # bei Zeithorizont von 5 tage werden aufgrund von 
     # fehlenden daten die daten von 1 mo genommen und genügend datenpunkte anzuzeigen
-    ta_horizon = horizon_map[horizon]
+    ta_horizon = HORIZON_MAP[horizon]
     if ta_horizon == "5d":
         ta_horizon = "1mo"    
     summary_rows.append(get_ta_summary_for_ticker(ticker, ta_horizon))
@@ -383,7 +311,7 @@ st.divider()
 
 st.title("Weltweite ETF-Sektorperformance")
 
-@st.cache_data(ttl="1h")
+@st.cache_data(ttl=CACHE_TTL_KURSE)
 def get_sector_performance(horizon_days):
     tickers = list(sektoren_etfs.values())
     raw_data = yf.download(tickers, period=f"{horizon_days}d")
@@ -403,12 +331,10 @@ def get_sector_performance(horizon_days):
     return pd.DataFrame(results)
 
 
-zeit_map = {"1 Woche": 7, "1 Monat": 30, "6 Monate": 180, "1 Jahr": 365, "5 Jahre": 1825}
-auswahl = st.pills("Zeitraum wählen", options=list(zeit_map.keys()), default="1 Monat")
-
+auswahl = st.pills("Zeitraum wählen", options=list(SEKTOR_ZEIT_MAP.keys()), default="1 Monat")
 if auswahl is None:
     auswahl = "1 Monat"
-df_perf = get_sector_performance(zeit_map[auswahl])
+df_perf = get_sector_performance(SEKTOR_ZEIT_MAP[auswahl])
 
 if not df_perf.empty:
     df_perf["Weight"] = 1

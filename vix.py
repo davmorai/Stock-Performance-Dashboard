@@ -2,10 +2,15 @@ import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
 
-
-VIX_TICKER = "^VIX"
-VIX_MAX_RANGE = 80
-
+from config import (
+    VIX_TICKER,
+    VIX_MAX_RANGE,
+    VIX_LOW_THRESHOLD,
+    VIX_MODERATE_THRESHOLD,
+    VIX_COLOR_LOW,
+    VIX_COLOR_MODERATE,
+    VIX_COLOR_HIGH,
+) #einzelne konstanten
 
 def fetch_vix_value():
     """Daten holen von yfinance VIX data"""
@@ -18,15 +23,12 @@ def fetch_vix_value():
         pass
     return None
 
-
 def get_vix_status(vix_value):
-    """Farbenskala"""
-    if vix_value < 15:
-        return "Low", "#4CAF50"
-    if vix_value < 25:
-        return "Moderate", "#FFB300"
-    return "High", "#FF4B4B"
-
+    if vix_value < VIX_LOW_THRESHOLD:
+        return "Low", VIX_COLOR_LOW
+    if vix_value < VIX_MODERATE_THRESHOLD:
+        return "Moderate", VIX_COLOR_MODERATE
+    return "High", VIX_COLOR_HIGH
 
 def build_vix_figure(vix_value, vix_color):
     """Gauge Figure Plotly"""
