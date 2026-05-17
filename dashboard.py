@@ -42,32 +42,28 @@ with header_left:
         f'<p class="date-text">{aktuell.strftime("%A, %B %d, %Y")}</p>',
         unsafe_allow_html=True,
     )
- 
-    # Begrüssung + Edit-Button(Stift)
-    edit_icon = "" if st.session_state.edit_mode else "✎"
+    #Begrüssung
     st.markdown(
         f"""
         <div class="greeting-container">
             <span class="greeting-text">{begruessung},</span>
             <span class="name-text">{st.session_state.name}</span>
-            <button class="edit-btn" title="Name bearbeiten">{edit_icon}</button>
         </div>
         """,
         unsafe_allow_html=True,
     )
- 
     if not st.session_state.edit_mode:
-        if st.button("✎ Name ändern", key="edit_name"):
+        if st.button("✎", key="edit_name", help="Name bearbeiten"):
             st.session_state.edit_mode = True
             st.rerun()
-    else:
+
+    if st.session_state.edit_mode:
         neuer_name = st.text_input("Name", value=st.session_state.name, label_visibility="collapsed")
-        if st.button("Speichern", key="save_name"):
-            st.session_state.name = neuer_name
-            save_name(neuer_name)
+        if st.button("✔ Speichern", key="save_name"):
+            st.session_state.name = neuer_name if neuer_name.strip() else "Besucher"
+            save_name(st.session_state.name)
             st.session_state.edit_mode = False
             st.rerun()
-
 
 # Marktübersicht-Untertitel
     st.markdown(
@@ -103,11 +99,12 @@ with header_right:
 #Ticker-Auswahl & Zeithorizont
 def stocks_to_str(stocks: list) -> str:
     return ",".join(stocks)
- 
+
+#lädt beim ersten mal die default danach session state
 if "tickers_input" not in st.session_state:
-    st.session_state.tickers_input = st.query_params.get(
-        "stocks", stocks_to_str(DEFAULT_STOCKS)
-    ).split(",")
+    raw = st.query_params.get("stocks", "")
+    st.session_state.tickers_input = raw.split(",") if raw else list(DEFAULT_STOCKS)
+ 
  
 cols = st.columns([0.30, 0.70], gap="medium")
 top_left_cell = cols[0].container(border=True, height="content", vertical_alignment="center")
@@ -124,6 +121,7 @@ with top_left_cell:
     horizon = str(selected_horizon) if selected_horizon is not None else "6 Monate"
  
 tickers = [t.upper() for t in tickers]
+st.session_state.tickers_input = tickers
  
 if tickers:
     st.query_params["stocks"] = stocks_to_str(tickers)
@@ -161,16 +159,16 @@ if normalized.empty:
 
 #Performance Metriken Best vs Worst
 latest_prices = sorted(
-    [(normalized[t].iat[-1], t) for t in tickers if t in normalized.columns]
-)
+    [(float(normalized[t].iat[-1]), t) for t in tickers if t in normalized.columns]  # type: ignore[arg-type]
+)#sonst persistierendes problem mit Float, somit beste lösung
 
 min_val, max_val = latest_prices[0], latest_prices[-1]
  
 bottom_left_cell = cols[0].container(border=True, height="stretch", vertical_alignment="center")
 with bottom_left_cell:
     m_cols = st.columns(2, gap="small")
-    m_cols[0].metric("Beste Aktie",        max_val[1], delta=f"{(max_val[0]-1)*100:.1f}%")
-    m_cols[1].metric("Schlechteste Aktie", min_val[1], delta=f"{(min_val[0]-1)*100:.1f}%")
+    m_cols[0].metric("Beste Aktie",        max_val[1], delta=f"{(max_val[0]-1)*100:.1f}%")#float lässt sich auch hier einsetzen aber gleicher fehler
+    m_cols[1].metric("Schlechteste Aktie", min_val[1], delta=f"{(min_val[0]-1)*100:.1f}%")#oder auch hier :D
  
 
 #Linien Diagramm zum Vergleich der Aktien
