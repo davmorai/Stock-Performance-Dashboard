@@ -8,7 +8,7 @@ from sektor_details import zeige_top_10_bereich, get_sector_performance
 from technical_analysis import get_ta_summary_for_ticker
 from vix import render_vix_widget
 from styles import apply_custom_css
-from utils import load_name, save_name, normalized_and_clean, load_data, resolve_ta_horizon
+from data_utils import load_name, save_name, normalized_and_clean, load_data, resolve_ta_horizon
 from config import (
     COLOR_MARKET_OPEN,
     COLOR_MARKET_CLOSED,
