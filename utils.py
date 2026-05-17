@@ -45,7 +45,6 @@ def resolve_ta_horizon(period: str) -> str:
     """
     return "1mo" if period == "5d" else period
 
-
 #Data Handling and Cleaning
 def normalized_and_clean(data: pd.DataFrame) -> tuple[pd.DataFrame, set]:
     """
@@ -78,7 +77,7 @@ def normalized_and_clean(data: pd.DataFrame) -> tuple[pd.DataFrame, set]:
  
     data_clean = data_clean.loc[first_valid_idx:]
  
-    # Nur Spalten behalten die durchgehend Werte haben → erkennt delisted Aktien
+    #es werden nur spalten beibehalten die Werte haben- also falls delistet dann weg
     data_valid = data_clean.ffill().bfill()
     complete_cols = data_clean.columns[data_clean.notna().sum() == len(data_clean)]
     data_valid = data_valid[complete_cols]
