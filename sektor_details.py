@@ -1,21 +1,8 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+from stocks import top_10_sektoren
 
-# Dictionary mit den Top-Aktien pro Sektor
-top_10_sektoren = {
-    "Technologie": ["AAPL", "MSFT", "NVDA", "AVGO", "ORCL", "ADBE", "CRM", "AMD", "ACN", "CSCO"],
-    "Gesundheitswesen": ["LLY", "UNH", "JNJ", "MRK", "ABBV", "TMO", "DHR", "ABT", "PFE", "AMGN"],
-    "Finanzwesen": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "SPGI", "GS", "MS", "AXP"],
-    "Nicht-Basiskonsumgüter": ["AMZN", "TSLA", "HD", "MCD", "NKE", "LOW", "SBUX", "BKNG", "TJX", "TGT"],
-    "Kommunikationsdienste": ["GOOGL", "META", "NFLX", "DIS", "CMCSA", "TMUS", "VZ", "T", "CHTR", "EA"],
-    "Industrie": ["GE", "CAT", "HON", "BA", "UNP", "UPS", "RTX", "LMT", "DE", "ADP"],
-    "Basiskonsumgüter": ["PG", "PEP", "KO", "WMT", "COST", "PM", "MO", "MDLZ", "TGT", "CL"],
-    "Energie": ["XOM", "CVX", "COP", "SLB", "EOG", "MPC", "PSX", "VLO", "OXY", "WMB"],
-    "Versorger": ["NEE", "DUK", "SO", "SRE", "AEP", "D", "EXC", "XEL", "ED", "PEG"],
-    "Immobilien": ["PLD", "AMT", "EQIX", "WELL", "PSA", "SPG", "O", "DLR", "CSGP", "CCI"],
-    "Rohstoffe": ["LIN", "SHW", "FCX", "ECL", "NEM", "APD", "NUE", "DOW", "CTVA", "VMC"]
-}
 
 @st.cache_data(ttl="1h", show_spinner="Lade aktuelle Werte...")
 def get_top_10_data(sector_name):

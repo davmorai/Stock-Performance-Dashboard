@@ -22,12 +22,11 @@ def apply_custom_css():
             margin: 0;
         }
         .name-text {
-            color: #4CAF50; /* Das Grün aus dem Bild */
+            color: #4CAF50;
             font-size: 2.4rem;
             font-weight: 700;
             margin: 0;
         }
-        /* Versteckt den Standard-Label vom Input */
         div[data-testid="stTextInput"] label {
             display: none;
         }

@@ -1,6 +1,5 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
-
  
 local_tz = ZoneInfo("Europe/Berlin")
 aktuell = datetime.now(local_tz)

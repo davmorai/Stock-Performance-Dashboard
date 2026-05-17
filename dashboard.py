@@ -19,6 +19,7 @@ from config import (
     CACHE_TTL_KURSE,
 )#einzelne config Konstanten
 
+
 #Session State für das problem mit rerun
 if "last_clicked_sector" not in st.session_state:
     st.session_state.last_clicked_sector = None
@@ -28,10 +29,9 @@ st.set_page_config(
     page_icon=":chart_with_upwards_trend:",
     layout="wide",
 )
-# --- Speichervariablen initialisieren ---
 
 #--Header Zellen---
-# CSS Header
+# CSS Settings
 apply_custom_css()
 
 if 'name' not in st.session_state:
@@ -42,7 +42,7 @@ if 'edit_mode' not in st.session_state:
 #----Ende Name Check---
 
 
-# Datum, Begrüßung und VIX in einer Zeile
+# Datum, Begrüßung und VIX in einer Spalte
 header_left, header_right = st.columns([0.75, 0.25], gap="xsmall")
 
 #Name und Datum
@@ -65,7 +65,6 @@ with header_left:
         if not st.session_state.edit_mode:
             if st.button("✎", key="edit_name"):
                 st.session_state.edit_mode = True
-                st.rerun()
 
     if st.session_state.edit_mode:
         neuer_name = st.text_input("Name", value=st.session_state.name)
@@ -73,7 +72,6 @@ with header_left:
             st.session_state.name = neuer_name
             save_name(neuer_name)
             st.session_state.edit_mode = False
-            st.rerun()
 
 
     #Logik von Öffnunszeiten

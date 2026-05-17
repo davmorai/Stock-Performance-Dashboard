@@ -23,7 +23,7 @@ Issues as rn:
 but as rn there is a complication between the 1y plot and error raising when data/stock doesnt exist
 but is still shown as existing with a base 1 which is standart  #FIXED
 -Pop up menu #Fixed
--Saturday and Sunday shows as open but its closed.
+-Saturday and Sunday shows as open but its closed. #FIXED 
 
 
 Aiming to:
