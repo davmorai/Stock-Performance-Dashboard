@@ -6,10 +6,11 @@ import plotly.express as px #alle Plots
 import os
 
 from stocks import STOCKS, DEFAULT_STOCKS, SEKTOREN_ETFS as sektoren_etfs
-from time_logic import begruessung, aktuell, std_min, nyse_nasdaq, lse, tse, crypto, local_tz,jetzt
+from time_logic import begruessung, aktuell, std_min, nyse_nasdaq, lse, tse, crypto, local_tz
 from sektor_details import zeige_top_10_bereich
 from technical_analysis import get_ta_summary_for_ticker
 from vix import render_vix_widget
+from styles import apply_custom_css
 
 #Session State für das problem mit rerun
 if "last_clicked_sector" not in st.session_state:
@@ -24,39 +25,7 @@ st.set_page_config(
 
 #--Header Zellen---
 # CSS Header
-st.markdown("""
-    <style>
-    .date-text {
-        color: #666;
-        font-size: 1.2rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: -10px;
-    }
-    .greeting-container {
-        display: flex;
-        align-items: baseline;
-        gap: 10px;
-    }
-    .greeting-text {
-        color: white;
-        font-size: 2.4rem;
-        font-weight: 700;
-        margin: 0;
-    }
-    .name-text {
-        color: #4CAF50; /* Das Grün aus dem Bild */
-        font-size: 2.4rem;
-        font-weight: 700;
-        margin: 0;
-    }
-    /* Versteckt den Standard-Label vom Input */
-    div[data-testid="stTextInput"] label {
-        display: none;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
+apply_custom_css()
 
 #---Name checken und speichern in data.csv---
 DATA_DIR = "data"
@@ -92,7 +61,7 @@ header_left, header_right = st.columns([0.75, 0.25], gap="xsmall")
 
 #Name und Datum
 with header_left:
-    st.markdown(f'<p class="date-text">{jetzt.strftime("%A, %B %d, %Y")}</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="date-text">{aktuell.strftime("%A, %B %d, %Y")}</p>', unsafe_allow_html=True)
 
     greeting_row, edit_col = st.columns([0.80, 0.20], gap="xxsmall")
     with greeting_row:

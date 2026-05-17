@@ -1,14 +1,12 @@
 from datetime import datetime
-import pytz
+from zoneinfo import ZoneInfo
 
-#Logik für Öffnungszeiten
-local_tz = pytz.timezone("Europe/Berlin")
+local_tz = ZoneInfo("Europe/Berlin")
 aktuell = datetime.now(local_tz)
-std_min = aktuell.strftime("%H:%M")  #Format 10:00
 
-#Logik für Begrüssung doppelt da andere Format notwendig
-jetzt = datetime.now()
-stunde = jetzt.hour
+stunde = aktuell.hour
+std_min = aktuell.strftime("%H:%M") #Format 10:00
+
 
 #Begrüssung
 
