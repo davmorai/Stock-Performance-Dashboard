@@ -1,9 +1,11 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-from stocks import top_10_sektoren, SEKTOREN_ETFS
+from stocks import TOP_10_SEKTOREN, SEKTOREN_ETFS
 from config import CACHE_TTL_SEKTOR
- 
+from data_utils import format_marketcap, style_daychange
+
+
  
 #Sektorperformance
 @st.cache_data(ttl=CACHE_TTL_SEKTOR)
@@ -32,10 +34,10 @@ def get_sector_performance(horizon_days: int) -> pd.DataFrame:
 @st.cache_data(ttl=CACHE_TTL_SEKTOR, show_spinner="Lade aktuelle Werte...")
 def get_top_10_data(sector_name: str) -> pd.DataFrame:
     """Tagesperformance und Marktkapitalisierung der Top-10 im Sektor."""
-    if sector_name not in top_10_sektoren:
+    if sector_name not in TOP_10_SEKTOREN:
         return pd.DataFrame()
  
-    tickers = top_10_sektoren[sector_name]
+    tickers = TOP_10_SEKTOREN[sector_name]
     try:
         raw_data = yf.download(tickers, period="2d", progress=False)
     except Exception:
@@ -45,9 +47,9 @@ def get_top_10_data(sector_name: str) -> pd.DataFrame:
     for ticker in tickers:
         try:
             close = (
-                raw_data["Close"][ticker].dropna()
-                if isinstance(raw_data["Close"], pd.DataFrame)
-                else raw_data["Close"].dropna()
+                raw_data["Close"][ticker].dropna() #type: ignore[arg-type]
+                if isinstance(raw_data["Close"], pd.DataFrame) #type: ignore[arg-type]
+                else raw_data["Close"].dropna() #type: ignore[arg-type]
             )
             tages_perf = (
                 (close.iloc[-1] / close.iloc[-2] - 1) * 100
@@ -70,31 +72,24 @@ def get_top_10_data(sector_name: str) -> pd.DataFrame:
     return df
  
  
-#Dialog
 @st.dialog("🔍 Sektor Details", width="large")
 def zeige_top_10_bereich(geklickter_sektor: str) -> None:
     """Popup mit Top-10-Tabelle für den angeklickten Sektor."""
     st.write(f"### Top Unternehmen im Sektor: **{geklickter_sektor}**")
- 
+
     df = get_top_10_data(geklickter_sektor)
     if df.empty:
         st.warning("Keine Daten für diesen Sektor gefunden.")
         return
- 
+
     df_anzeige = df.copy()
-    df_anzeige["Market Cap"] = df_anzeige["Market Cap"].apply(
-        lambda x: (
-            f"{x/1e12:.2f} Bio. $" if x >= 1e12
-            else f"{x/1e9:.2f} Mrd. $" if x >= 1e9
-            else f"{x:,.0f} $"
-        )
-    )
- 
+    df_anzeige["Market Cap"] = df_anzeige["Market Cap"].apply(format_marketcap)
+
     styled = df_anzeige.style.format({"Heute %": "{:+.2f} %"}).map(
-        lambda v: f'color: {"#00C851" if float(v) > 0 else "#ff4444"}; font-weight: bold;',
-        subset=["Heute %"],
-    )
- 
+    style_daychange,# type: ignore[arg-type]
+    subset=["Heute %"],
+)
+
     st.dataframe(
         styled,
         column_config={
