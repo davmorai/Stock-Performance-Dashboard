@@ -1,7 +1,5 @@
-yfinance        #daten
-plotly          #ploting
-plotly.express  #ploting
-pandas          #arrays
-streamlit       #Interface
-ta              #technical analysis tools
-ZoneInfo        #timezone
+yfinance>=1.3.0
+plotly>=6.7.0
+pandas>=3.0.0
+streamlit>=1.57.0
+ta>=0.11.0
