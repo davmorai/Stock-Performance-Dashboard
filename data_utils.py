@@ -64,6 +64,7 @@ def normalized_and_clean(data: pd.DataFrame) -> tuple[pd.DataFrame, set]:
     before_cols = set(data.columns)
  
     data_clean = data.dropna(axis=1, how="all")
+    
     if data_clean.empty:
         return data_clean, before_cols
  
