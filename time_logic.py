@@ -24,4 +24,5 @@ else:
 nyse_nasdaq = ist_wochentag and "15:30" <= std_min <= "22:00"
 lse         = ist_wochentag and "09:30" <= std_min <= "17:30"
 tse         = ist_wochentag and "02:00" <= std_min <= "08:00"
+dax_six     = ist_wochentag and "09:00" <= std_min <= "17:30"
 crypto      = True  # Crypto 24/7

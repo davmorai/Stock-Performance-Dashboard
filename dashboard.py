@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
  
 from stocks import STOCKS, DEFAULT_STOCKS
-from time_logic import begruessung, aktuell, nyse_nasdaq, lse, tse, crypto
+from time_logic import begruessung, aktuell, nyse_nasdaq, lse, tse, crypto, dax_six
 from sektor_details import zeige_top_10_bereich, get_sector_performance
 from technical_analysis import get_ta_summary_for_ticker
 from vix import render_vix_widget
@@ -75,9 +75,10 @@ with header_left:
     def dot(color: str, label: str) -> str:
         return f'<span style="color:{color};">●</span> {label}'
  
-    nyse_color  = COLOR_MARKET_OPEN if nyse_nasdaq else COLOR_MARKET_CLOSED
-    lse_color   = COLOR_MARKET_OPEN if lse         else COLOR_MARKET_CLOSED
-    tse_color   = COLOR_MARKET_OPEN if tse         else COLOR_MARKET_CLOSED
+    nyse_color    = COLOR_MARKET_OPEN if nyse_nasdaq else COLOR_MARKET_CLOSED
+    lse_color     = COLOR_MARKET_OPEN if lse         else COLOR_MARKET_CLOSED
+    tse_color     = COLOR_MARKET_OPEN if tse         else COLOR_MARKET_CLOSED
+    dax_six_color = COLOR_MARKET_OPEN if dax_six     else COLOR_MARKET_CLOSED
  
     st.markdown(
         f'<p style="font-size:0.9rem; color:#aaa; margin:0.3rem;">'
@@ -85,6 +86,8 @@ with header_left:
         f'{dot(nyse_color,"NASDAQ")} &nbsp;&nbsp;'
         f'{dot(lse_color,"LSE")} &nbsp;&nbsp;'
         f'{dot(tse_color,"TSE")} &nbsp;&nbsp;'
+        f'{dot(dax_six_color,"DAX")} &nbsp;&nbsp;'
+        f'{dot(dax_six_color,"SIX")} &nbsp;&nbsp;'
         f'{dot(COLOR_MARKET_OPEN,"Crypto")}'
         f'</p>',
         unsafe_allow_html=True,
