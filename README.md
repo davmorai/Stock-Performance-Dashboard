@@ -14,7 +14,7 @@ A personal stock market dashboard built with Streamlit — featuring portfolio t
 
 **Market Overview**
 - Personalized greeting with editable name (persisted to CSV)
-- Live exchange status indicators: NYSE, NASDAQ, LSE, TSE, Crypto
+- Live exchange status indicators: NYSE, NASDAQ, LSE, TSE, DAX, SIX, Crypto
 - VIX fear index gauge with color-coded risk levels (Low / Moderate / High)
 
 **Technical Analysis**
@@ -66,8 +66,8 @@ A personal stock market dashboard built with Streamlit — featuring portfolio t
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/your-username/aktien-dashboard.git
-cd aktien-dashboard
+git clone https://github.com/davmorai/Stock-Performance-Dashboard.git
+cd Stock-Performance-Dashboard
 ```
 
 **2. Install dependencies**
@@ -77,7 +77,7 @@ pip install -r requirements.txt
 
 **3. Run the app**
 ```bash
-streamlit run dashboard.py
+python -m streamlit run dashboard.py
 ```
 
 ---
@@ -99,10 +99,11 @@ All tuneable constants live in `config.py`:
 
 ## Roadmap
 
+- [ ] Performance & Caching Optimization: Implement asynchronous/parallel data fetching and refine cache invalidation to prevent slow initial loads
+- [ ] Unit-tests for edge-cases around Stock Split/ Reverse-Split and also for data utilities and TA computations
 - [ ] News feed with sentiment analysis or economic calendar
 - [ ] Additional TA indicators and signal overlays
 - [ ] Expand stock universe beyond US markets and overall Global Etf's
-- [ ] Unit tests for data utilities and TA computations
 
 ---
 
