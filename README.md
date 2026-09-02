@@ -103,6 +103,7 @@ All tuneable constants live in `config.py`:
 - [ ] Additional TA indicators and signal overlays
 - [ ] Expand stock universe beyond US markets and overall Global Etf's
 - [ ] Unit tests for data utilities and TA computations
+- [ ] Performance & Caching Optimization: Implement asynchronous/parallel data fetching and refine cache invalidation to prevent slow initial loads
 
 ---
 
