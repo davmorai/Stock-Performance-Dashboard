@@ -66,7 +66,7 @@ A personal stock market dashboard built with Streamlit — featuring portfolio t
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/your-username/aktien-dashboard.git
+git clone https://github.com/davmorai/aktien-dashboard.git
 cd aktien-dashboard
 ```
 
