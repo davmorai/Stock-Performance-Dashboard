@@ -61,24 +61,49 @@ A personal stock market dashboard built with Streamlit — featuring portfolio t
 ```
 
 ---
-
 ## Getting Started
+
+### Prerequisites
+* Python 3.9+ installed ([python.org](https://www.python.org/downloads/))
+* Git installed ([git-scm.com](https://git-scm.com/))
+
+---
+
+### Installation & Setup
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/davmorai/Stock-Performance-Dashboard.git
+git clone [https://github.com/davmorai/Stock-Performance-Dashboard.git](https://github.com/davmorai/Stock-Performance-Dashboard.git)
 cd Stock-Performance-Dashboard
+
+```
+**2. Create and activate a virtual environment**
+
+Windows:
+```bash
+py -m venv venv
+.\venv\Scripts\activate
+
+```
+macOS / Linux:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+
 ```
 
-**2. Install dependencies**
+**3. Install dependencies**
 ```bash
-pip install -r requirements.txt
-```
+pip install -r requirements.txt 
 
-**3. Run the app**
-```bash
-python -m streamlit run dashboard.py
 ```
+Note (Windows without venv): If pip is not recognized, use py -m pip install -r requirements.txt.
+
+**4. Run the application**
+```bash
+streamlit run dashboard.py
+```
+(Alternative: python -m streamlit run dashboard.py)
 
 ---
 
