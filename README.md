@@ -14,7 +14,7 @@ A personal stock market dashboard built with Streamlit — featuring portfolio t
 
 **Market Overview**
 - Personalized greeting with editable name (persisted to CSV)
-- Live exchange status indicators: NYSE, NASDAQ, LSE, TSE, Crypto
+- Live exchange status indicators: NYSE, NASDAQ, LSE, TSE, DAX, SIX, Crypto
 - VIX fear index gauge with color-coded risk levels (Low / Moderate / High)
 
 **Technical Analysis**
