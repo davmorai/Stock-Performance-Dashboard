@@ -66,8 +66,8 @@ A personal stock market dashboard built with Streamlit — featuring portfolio t
 
 **1. Clone the repository**
 ```bash
-git clone [https://github.com/davmorai/aktien-dashboard.git](https://github.com/davmorai/Stock-Performance-Dashboard.git)
-cd aktien-dashboard
+git clone https://github.com/davmorai/Stock-Performance-Dashboard.git
+cd Stock-Performance-Dashboard
 ```
 
 **2. Install dependencies**
@@ -77,7 +77,7 @@ pip install -r requirements.txt
 
 **3. Run the app**
 ```bash
-streamlit run dashboard.py
+python -m streamlit run dashboard.py
 ```
 
 ---
